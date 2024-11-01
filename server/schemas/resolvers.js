@@ -5,18 +5,17 @@ const { getSingleUser } = require('../controllers/user-controller');
 
 const resolvers = {
 	Query: {
-		getSingleUser: async (parent, { id, username }, context) => {
-			const foundUser = await User.findOne({
-				$or: [{ _id: id }, { username: username }],
-			});
+		me: async (parent, args, context) => {
+			console.log(context.user);
+			if (context.user) {
+				const userData = await User.findOne({ _id: context.user._id })
+					.select('-__v -password')
+					.populate('savedBooks');
 
-			if (!foundUser) {
-				return res
-					.status(400)
-					.json({ message: 'Cannot find a user with this id!' });
+				return userData;
 			}
 
-			return foundUser;
+			throw new Error('Not logged in');
 		},
 	},
 	Mutation: {
